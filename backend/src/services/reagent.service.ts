@@ -48,4 +48,11 @@ export class ReagentService {
     await this.alerts.cacheLowStockAlert(saved, 'reagent');
     return saved;
   }
+
+  async adjustFrozenStock(id: string, delta: number) {
+    const reagent = await this.findOne(id);
+    reagent.frozenStock = Number(reagent.frozenStock) + delta;
+    if (reagent.frozenStock < 0) reagent.frozenStock = 0;
+    return this.repo.save(reagent);
+  }
 }

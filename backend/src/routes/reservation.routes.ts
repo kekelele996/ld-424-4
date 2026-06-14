@@ -4,18 +4,16 @@ import { AuditLog } from '../models/auditLog.entity';
 import { Consumable } from '../models/consumable.entity';
 import { Reagent } from '../models/reagent.entity';
 import { Reservation } from '../models/reservation.entity';
-import { UsageRecord } from '../models/usageRecord.entity';
-import { UsageController } from '../controllers/usage.controller';
+import { ReservationController } from '../controllers/reservation.controller';
 import { AuditService } from '../services/audit.service';
 import { AlertService } from '../services/alert.service';
 import { ConsumableService } from '../services/consumable.service';
 import { ReagentService } from '../services/reagent.service';
 import { ReservationService } from '../services/reservation.service';
-import { UsageService } from '../services/usage.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UsageRecord, Reagent, Consumable, Reservation, AuditLog])],
-  controllers: [UsageController],
-  providers: [UsageService, ReagentService, ConsumableService, ReservationService, AuditService, AlertService],
+  imports: [TypeOrmModule.forFeature([Reservation, Reagent, Consumable, AuditLog])],
+  controllers: [ReservationController],
+  providers: [ReservationService, ReagentService, ConsumableService, AuditService, AlertService],
 })
-export class UsageRoutesModule {}
+export class ReservationRoutesModule {}

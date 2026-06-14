@@ -39,4 +39,11 @@ export class ConsumableService {
     await this.alerts.cacheLowStockAlert(saved, 'consumable');
     return saved;
   }
+
+  async adjustFrozenStock(id: string, delta: number) {
+    const consumable = await this.findOne(id);
+    consumable.frozenStock = Number(consumable.frozenStock) + delta;
+    if (consumable.frozenStock < 0) consumable.frozenStock = 0;
+    return this.repo.save(consumable);
+  }
 }

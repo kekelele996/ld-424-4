@@ -7,6 +7,7 @@ import { AuthUser } from '../types/interfaces';
 import { AuditService } from './audit.service';
 import { ConsumableService } from './consumable.service';
 import { ReagentService } from './reagent.service';
+import { ReservationService } from './reservation.service';
 
 @Injectable()
 export class UsageService {
@@ -15,6 +16,7 @@ export class UsageService {
     private readonly reagents: ReagentService,
     private readonly consumables: ConsumableService,
     private readonly audit: AuditService,
+    private readonly reservations: ReservationService,
   ) {}
 
   list() {
@@ -28,6 +30,12 @@ export class UsageService {
       quantity: Number(payload.quantity ?? 0),
       purpose: String(payload.purpose ?? payload.description ?? ''),
     };
+    const reservationId = payload.reservationId ? String(payload.reservationId) : undefined;
+
+    if (reservationId) {
+      return this.createFromReservation(normalized, reservationId, user);
+    }
+
     let approvalStatus = normalized.approvalStatus ?? UsageStatus.Approved;
     if (normalized.itemType === ItemType.Reagent) {
       const reagent = await this.reagents.findOne(String(normalized.itemId));
@@ -43,15 +51,44 @@ export class UsageService {
     return record;
   }
 
+  private async createFromReservation(normalized: Partial<UsageRecord>, reservationId: string, user: AuthUser) {
+    const reservation = await this.reservations.fulfill(reservationId, Number(normalized.quantity), user);
+
+    const record = await this.repo.save(
+      this.repo.create({
+        ...normalized,
+        itemId: reservation.itemId,
+        itemType: reservation.itemType,
+        userId: user.id,
+        quantity: Number(normalized.quantity) || Number(reservation.fulfilledQuantity),
+        purpose: normalized.purpose || reservation.purpose,
+        approvalStatus: UsageStatus.Approved,
+        reservationId,
+      }),
+    );
+
+    await this.audit.record(user, 'CREATE_USAGE_FROM_RESERVATION', 'usageRecord', {
+      id: record.id,
+      reservationId,
+    });
+
+    return record;
+  }
+
   async approve(id: string, user: AuthUser) {
     const record = await this.repo.findOneBy({ id });
     if (!record) throw new BadRequestException('领用记录不存在');
     if (record.approvalStatus === UsageStatus.Approved) return record;
+    if (record.reservationId) {
+      await this.reservations.fulfill(record.reservationId, Number(record.quantity), user);
+    }
     record.approvalStatus = UsageStatus.Approved;
     record.approverId = user.id;
     const saved = await this.repo.save(record);
-    if (saved.itemType === ItemType.Reagent) await this.reagents.adjustStock(saved.itemId, -Number(saved.quantity), user, 'APPROVE_REAGENT_USAGE');
-    else await this.consumables.adjustStock(saved.itemId, -Number(saved.quantity), user, 'APPROVE_CONSUMABLE_USAGE');
+    if (!record.reservationId) {
+      if (saved.itemType === ItemType.Reagent) await this.reagents.adjustStock(saved.itemId, -Number(saved.quantity), user, 'APPROVE_REAGENT_USAGE');
+      else await this.consumables.adjustStock(saved.itemId, -Number(saved.quantity), user, 'APPROVE_CONSUMABLE_USAGE');
+    }
     await this.audit.record(user, 'APPROVE_USAGE', 'usageRecord', { id });
     return saved;
   }

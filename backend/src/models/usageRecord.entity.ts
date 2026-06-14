@@ -34,6 +34,9 @@ export class UsageRecord {
   @Column({ nullable: true })
   approverId?: string;
 
+  @Column({ nullable: true })
+  reservationId?: string;
+
   @ManyToOne(() => Reagent, (reagent) => reagent.usages, { nullable: true, createForeignKeyConstraints: false })
   @JoinColumn({ name: 'itemId' })
   reagent?: Reagent;

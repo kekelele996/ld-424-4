@@ -5,6 +5,7 @@ import { databaseConfig } from './config/database.config';
 import { ConsumableRoutesModule } from './routes/consumable.routes';
 import { InventoryCheckRoutesModule } from './routes/inventoryCheck.routes';
 import { ReagentRoutesModule } from './routes/reagent.routes';
+import { ReservationRoutesModule } from './routes/reservation.routes';
 import { StockInRoutesModule } from './routes/stockIn.routes';
 import { UsageRoutesModule } from './routes/usage.routes';
 import { AuditLogMiddleware } from './middlewares/auditLog.middleware';
@@ -23,6 +24,7 @@ import { ValidationMiddleware } from './middlewares/validation.middleware';
     StockInRoutesModule,
     UsageRoutesModule,
     InventoryCheckRoutesModule,
+    ReservationRoutesModule,
   ],
 })
 export class AppModule implements NestModule {

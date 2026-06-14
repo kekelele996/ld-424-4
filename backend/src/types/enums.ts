@@ -53,3 +53,10 @@ export enum InventoryCheckStatus {
   Completed = 'Completed',
   Discrepancy = 'Discrepancy',
 }
+
+export enum ReservationStatus {
+  Pending = 'Pending',
+  Fulfilled = 'Fulfilled',
+  Cancelled = 'Cancelled',
+  Expired = 'Expired',
+}

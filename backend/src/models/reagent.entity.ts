@@ -35,6 +35,9 @@ export class Reagent {
   @Column('decimal', { precision: 12, scale: 3, default: 0 })
   currentStock!: number;
 
+  @Column('decimal', { precision: 12, scale: 3, default: 0 })
+  frozenStock!: number;
+
   @Column()
   unit!: string;
 
